@@ -1,25 +1,58 @@
 @startuml
-title Банк Стандарт - диаграмма компонентов
+title Банк Стандарт - диаграмма контейнеров
 
 top to bottom direction
 
 !includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
 
+
+Person(User, "User", "Клиент Банка")
+
+System(Ibank, "Ibank", "Инернет Банк")
+
 System_Boundary(Ibank, "Bank System") {
-  Container(WebApp, "Web Application", "Java, Spring", "Request Deposits")
-  Container(Database, "Database", "PostgreSQL", "Stores user data and schedules")
+  Container(WebApp, "Web Application", "Java, Spring", "Internet Bank")
+  Container(Database, "Database", "Oracle", "Stores requests for deposits")
+  
+  Container(Proxy, "Gateway", "Go", "API Gateway")
+
+  Container(RepositoryLayer, "Repository Layer", "Data access logic")
+
+  Container(AuthControl, "AuthControl", "Go", "Авторизация")
+  Container(DepositList, "Список депозитов", "Список Депозитов")
+  Container(Offers, "Персональные предложения ставок", "Индивидуальные ставки")
+  Container(ABSAdapter, "Адаптер АБС", "Адаптер АБС")
+
+}
+
+
+System_Boundary(LegacyBank, "Internal Bank System") {
+  Container(SMS, "SMS gateway", "СМС-верификация")
+  Container(ABS, "ABS system", "ABS")
+  Container(CreditPipeline, "Кредитный конвейер", "Кредиты")
+  Container(Scoring, "Скоринг", "Скоринг")
 }
 
 System_Ext(buero, "Credit Stories", "Бюро кредитных историй")
-
-Container(WebApp, "Web Application", "Java, Spring") {
-  Component(ServiceLayer, "Service Layer", "Business logic")
-  Component(RepositoryLayer, "Repository Layer", "Data access logic")
-}
-
-Container(CRM, "CRM system", "CRM used in call center")
-Container(ABS, "ABS system", "ABS")
+System_Ext(CRM, "CRM system", "CRM used in call center")
 
 
-Rel(RepositoryLayer,Database,"Reads/Writes user data")
+Rel(User, WebApp, "Просмотр и заказ депозитов")
+Rel(CRM, Proxy, "Запросы на депозит от call центра")
+Rel(WebApp, Proxy, "Запросы на депозит от Internet Bank")
+Rel(Proxy, AuthControl, "Проверка авторизации пользователя")
+Rel(Offers, AuthControl, "Верификация по СМС")
+Rel(Proxy, Offers, "Переадресует запросы на сервис персональных прпедложений")
+Rel(Proxy, DepositList, "Переадресует запросы на обрабочик (feature toggle)")
+Rel(Proxy, ABSAdapter, "Переадресует запросы на ABS (feature toggle). Синхронизация с АБС")
+Rel(ABSAdapter, ABS, "Переадресует запросы на ABS (feature toggle)")
+Rel(ABS, SMS, "СМС уведомление об открытии депозита")
+
+Rel(Offers, RepositoryLayer, "Персональные предложения")
+Rel(DepositList, RepositoryLayer, "Хранение заявок")
+Rel(AuthControl, SMS, "Отсылка СМС для подтверждения заявок")
+Rel(RepositoryLayer, ABSAdapter, "Периодическая синхронизация с backoffice")
+Rel(RepositoryLayer,Database,"Работа с базой")
+Rel(CreditPipeline, buero, "Запрос данных о кредитной истории")
+Rel(CreditPipeline, ABS,"Запрос внутренних данных о клиенте")
 @enduml
