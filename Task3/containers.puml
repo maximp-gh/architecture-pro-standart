@@ -1,0 +1,25 @@
+@startuml
+title Банк Стандарт - диаграмма компонентов
+
+top to bottom direction
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+
+System_Boundary(Ibank, "Bank System") {
+  Container(WebApp, "Web Application", "Java, Spring", "Request Deposits")
+  Container(Database, "Database", "PostgreSQL", "Stores user data and schedules")
+}
+
+System_Ext(buero, "Credit Stories", "Бюро кредитных историй")
+
+Container(WebApp, "Web Application", "Java, Spring") {
+  Component(ServiceLayer, "Service Layer", "Business logic")
+  Component(RepositoryLayer, "Repository Layer", "Data access logic")
+}
+
+Container(CRM, "CRM system", "CRM used in call center")
+Container(ABS, "ABS system", "ABS")
+
+
+Rel(RepositoryLayer,Database,"Reads/Writes user data")
+@enduml
