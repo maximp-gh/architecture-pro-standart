@@ -1,0 +1,63 @@
+@startuml
+title Банк Стандарт - диаграмма контейнеров
+
+top to bottom direction
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+
+
+Person(User, "User", "Клиент Банка")
+Person(NewUser, "New User", "Новый пользователь")
+Person(Staff, "Сотрудник офиса", "Сотрудник офиса")
+
+System(Ibank, "Ibank", "Инернет Банк")
+System(WebSite, "Сайт", "Сайт")
+
+System_Boundary(Ibank, "Bank System") {
+  Container(WebApp, "Web Application", "Java, Spring", "Internet Bank")
+  Container(Database, "Database", "Oracle", "Stores requests for deposits")
+  
+  Container(Proxy, "Gateway", "Go", "API Gateway")
+
+  Container(RepositoryLayer, "Repository Layer", "Data access logic")
+
+  Container(CredOffers, "Предодобренные кредиты", "Предодобренные кредиты")
+  
+   Container(NewUsers, "Заявки от не клиентов", "Заявки от не клиентов")
+  
+  Container(ABSAdapter, "Адаптер АБС", "Адаптер АБС")
+
+}
+
+
+System_Boundary(LegacyBank, "Internal Bank System") {
+  Container(SMS, "SMS gateway", "СМС-верификация")
+  Container(ABS, "ABS system", "ABS")
+  Container(CreditPipeline, "Кредитный конвейер", "Кредиты")
+  Container(Scoring, "Скоринг", "Скоринг")
+}
+
+System_Ext(buero, "Credit Stories", "Бюро кредитных историй")
+
+
+Rel(User, WebApp, "Просмотр и заказ депозитов")
+Rel(WebApp, Proxy, "Запросы на кредит от Internet Bank")
+Rel(WebSite, Proxy, "Запросы на кредит от сайта")
+Rel(Proxy, CredOffers, "Переадресует запросы на сервис персональных предложений")
+Rel(Proxy, NewUsers, "Получение одобрения")
+Rel(CredOffers, ABSAdapter, "Регистрация ускоренной заявки")
+Rel(CredOffers, Scoring, "Скоринг вне рабочих часов")
+Rel(ABSAdapter, ABS, "Переадресует запросы на ABS")
+Rel(ABS, SMS, "СМС уведомление об открытии кредита")
+
+Rel(CredOffers, RepositoryLayer, "Выборка предодобренных предложений кредитов и ставок")
+Rel(NewUsers, Scoring, "Скоринг по БКИ")
+Rel(NewUsers, ABSAdapter, "Регистрация заявки для обработки в офисе")
+
+Rel(RepositoryLayer, ABSAdapter, "Периодическая синхронизация с backoffice")
+Rel(RepositoryLayer,Database,"Работа с базой")
+Rel(Scoring, buero, "Запрос данных о кредитной истории")
+Rel(Scoring, ABS,"Запрос внутренних данных о клиенте")
+Rel(Scoring, CreditPipeline,"Запрос внутренних данных о клиенте")
+
+@enduml
