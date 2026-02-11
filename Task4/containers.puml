@@ -1,0 +1,68 @@
+@startuml
+title Банк Стандарт - диаграмма контейнеров
+
+top to bottom direction
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+
+AddElementTag("new", $bgColor="orange")
+
+Person(User, "User", "Клиент Банка")
+Person(NewUser, "New User", "Новый пользователь")
+Person(Staff, "Сотрудник депозитного отдела", "Сотрудник депозитного отдела")
+
+System(Ibank, "Ibank", "Система Интернет Банка")
+
+System_Boundary(Ibank, "Bank System") {
+
+  Container(WebSite, "Web Site", "Java, Spring", "Сайт")
+  Container(WebApp, "Web Application", "Java, Spring", "Internet Bank")
+  Container(Database, "Database", "Oracle", "Stores requests for deposits")
+  
+  Container(Proxy, "Gateway", "Go", "API Gateway")
+
+  Container(RepositoryLayer, "Repository Layer", "Data access logic")
+
+  Container(AuthControl, "AuthControl", "Go", "Авторизация")
+  Container(DepositList, "Список депозитов", "Список Депозитов")
+  Container(Offers, "Персональные предложения ставок", "Индивидуальные ставки")
+  Container(ABSAdapter, "Адаптер АБС", "Адаптер АБС")
+  Container(Export, "Экспорт ставок SFTP", "SFTP", $tags="new")
+}
+
+
+System_Boundary(LegacyBank, "Internal Bank System") {
+  Container(SMS, "SMS gateway", "СМС-верификация")
+  Container(ABS, "ABS system", "ABS") {
+    Component(CalcDeposit, "Расчет  ставки по депозитам", "Расчет")
+  }
+}
+
+System_Ext(CRM, "CRM system", "CRM used in call center")
+
+
+Rel(User,    WebApp,  "Просмотр общих и персонализированных депозитов и заявка на депозит")
+Rel(NewUser, WebSite, "Просмотр и заявки на депозиты")
+
+Rel(CRM, Proxy, "Запросы на депозит от call центра")
+Rel(WebApp, Proxy, "Запросы на депозит от Internet Bank (сущ. клиенты)")
+Rel(WebSite, Proxy, "Запросы на депозит от новых клиентов")
+Rel(Proxy, AuthControl, "Проверка авторизации пользователя")
+Rel(Offers, AuthControl, "Верификация по СМС")
+Rel(Proxy, Offers, "Переадресует запросы на сервис персональных предложений")
+Rel(Export, Offers, "Запрос ставок")
+Rel(Proxy, DepositList, "Переадресует запросы на обрабочик (feature toggle)")
+Rel(Proxy, ABSAdapter, "Переадресует запросы на ABS (feature toggle). Синхронизация с АБС")
+Rel(ABSAdapter, ABS, "Переадресует запросы на ABS (feature toggle)")
+Rel(ABS, SMS, "СМС уведомление об открытии депозита")
+
+Rel(Offers, RepositoryLayer, "Персональные предложения")
+Rel(DepositList, RepositoryLayer, "Хранение заявок")
+Rel(AuthControl, SMS, "Отсылка СМС для подтверждения заявок")
+Rel(RepositoryLayer, ABSAdapter, "Периодическая синхронизация с backoffice")
+Rel(RepositoryLayer,Database,"Работа с базой")
+
+Rel(Staff, ABS, "Подтверждение по депозитам")
+Rel(ABS, ABSAdapter, "Уведомления о новых ставках")
+
+@enduml

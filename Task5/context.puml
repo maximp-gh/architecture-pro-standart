@@ -1,0 +1,36 @@
+@startuml
+title Получение ставок по депозитам кол-центрами - диаграмма контекста
+
+top to bottom direction
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+
+
+Person(User, "User", "Клиент Банка")
+Person(NewUser, "New User", "Новый пользователь")
+Person(Staff, "Сотрудник офиса", "Сотрудник офиса")
+
+System(Ibank, "Ibank", "Система Интернет Банка")
+System(WebSite, "Сайт", "Сайт")
+
+System(LegacyBank, "ABS", "АБС") 
+
+System_Ext(SMS, "Telecom system", "SMS/Telecom")
+
+
+Rel(User,    Ibank,  "Просмотр предодобренных кредитов, заявка на кредит")
+Rel(NewUser, WebSite,  "Получение одобрения на кредит по БКИ")
+Rel(Staff, LegacyBank, "Внесение идентифицированной заявки на кредит")
+
+
+Rel(LegacyBank, Ibank, "Данные о предодобренных кредитах и ставках")
+Rel(LegacyBank, WebSite, "Данные о кредитных ставках")
+
+Rel(WebSite, LegacyBank, "Запросы на скоринг по БКИ")
+
+
+Rel(Ibank, LegacyBank, "Заявка на предодобренный кредит (ускоренная процедура)")
+Rel(LegacyBank, SMS, "СМС уведомление о статусе кредита")
+
+
+@enduml

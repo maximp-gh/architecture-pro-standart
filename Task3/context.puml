@@ -1,0 +1,36 @@
+@startuml
+title Цифровизация депозитного направления - диаграмма контекста
+
+top to bottom direction
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+
+
+Person(User, "User", "Клиент Банка")
+Person(NewUser, "New User", "Новый пользователь")
+Person(Staff, "Сотрудник депозитного отдела", "Сотрудник депозитного отдела")
+Person(CredStaff, "Сотрудник кредитного отдела", "Сотрудник кредиитного отдела")
+
+System(Ibank, "Ibank", "Система Интернет Банка")
+System(WebSite, "Сайт", "Сайт")
+
+System(LegacyBank, "ABS", "АБС") 
+
+System_Ext(CRM, "CRM system", "CRM used in call center")
+System_Ext(SMS, "Telecom system", "SMS/Telecom")
+
+
+Rel(User,    Ibank,  "Просмотр общих и персонализированных депозитов и заявка на депозит")
+Rel(NewUser, WebSite,  "Просмотр общих депозитов и заявка на депозит")
+Rel(Staff, LegacyBank, "Подтверждение заявки на депозит")
+Rel(CredStaff, LegacyBank, "Данные для вычисления ставки")
+
+Rel(CRM, LegacyBank, "Запросы на депозит от call центра")
+Rel(WebSite, LegacyBank, "Запросы на депозит от новых клиентов")
+
+
+Rel(Ibank, LegacyBank, "Получение данных о ставках, регистрация заявок на депозит")
+Rel(LegacyBank, SMS, "СМС уведомление об открытии депозита")
+
+
+@enduml
